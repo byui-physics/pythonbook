@@ -126,7 +126,7 @@ points in the array. It returns {\tt yp} and {\tt ypp}, numerical
 approximations to the first and second derivatives. \index{Derivative
 function}
 
-\begin{codeexample}
+\begin{codeexample}[derivs.py]
 \begin{VerbatimOut}{\listingFile}
 
 # This function numerically differentiates the array y which
@@ -420,7 +420,7 @@ whereas \texttt{cumtrapz} assumes a step size of one. This code is more
 intuitive, but less efficient. Study this code to see how it works, but use
 \texttt{cumtrapz} and multiply by \texttt{dx} as above when you actually do
 calculations.
-\begin{codeexample}
+\begin{codeexample}[indefint.py]
 \begin{VerbatimOut}{\listingFile}
 function g=indefint(y,dx)
 
@@ -516,7 +516,7 @@ integral(f,0,2,'AbsTol',1e-8)
 Python also has a command {\tt integrate2} that does double integrals. Here's
 how to use it to integrate the function $f(x,y) = \cos (xy)$.
 
-\begin{codeexample}
+\begin{codeexample}[f2int.py]
 \begin{VerbatimOut}{\listingFile}
 clear; close all;
 
