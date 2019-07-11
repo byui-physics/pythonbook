@@ -2,6 +2,8 @@
 
 \label{chap:Calculus}
 
+\marginfig{Figures/centerdiff}{``Actual" shows the actual slope of the function at point b. ``b-c" shows the slope calculated using points b and c. ``a-c" shows the slope calculated using points a and c. Notice that ``a-c" is much closer to the actual slope than ``a-b".}
+
 In numerical physics we represent functions like $f(x)$ as discrete points on
 a grid.  If you are careful, you can use these discrete values to quickly
 calculate numerical approximations to the derivative $f'(x)$ and the integral
@@ -12,29 +14,20 @@ $\int_a^b f(x) dx$.
 \section{Derivatives}
 \index{Derivatives, numerical}
 
-The instructor of your first calculus class probably introduced the
-derivative with a formula like this:
+When working with numerical data, we usually don't know the exact function that generated the data.  Therefore, we cannot take a numerical derivative using the power law, or chain rule, or any other of the rules you learned in calculus.  However, a derivative is the slope of a line at a given point and you can find the slope of a line through any two points using:
 \begin{equation}
-    \frac{df}{dx} =
-    \lim_{ h \rightarrow 0} \frac{f(x+h)-f(x) }{ h} .
+\text{slope} = \frac{y_2-y_1}{x_2-x_1}
 \end{equation}
-To do a derivative numerically on a grid, we use the following slightly
-different, but numerically more accurate, form:
+
+
+In order to use the slope equation, you will need to choose two points.  When working with an evenly spaced grid, you will get the most accurate slope if you pick two points that are close to\sidenote{The further away the points are from each other, the less accurate the derivative is. To determine the exact uncertainty in your derivative requires Taylor expansions and some inventive algebra. However, here's a rough rule of thumb. If $f(x)$ changes
+significantly over an interval in $x$ of about $L$, the first
+derivative of $f(x)$ is fairly accurate as long as $\Delta x<=10^{-5}L$; for the second derivative  $\Delta x <=10^{-4}L$.} and centered around the point where you want the derivative (see Fig. \ref{Figures/centerdiff}). This technique is called a centered difference. Using index ($i$) notation, the derivative at a certain point ($f_i$) on a grid is
 \begin{equation}
-\frac{df }{ dx} = \lim_{ h \rightarrow 0} \frac{f(x+h)-f(x-h) }{ 2 h} .
+\frac{d f_i}{dx} \approx \frac{f_{i+1}-f_{i-1}}{2 \Delta x}
 \end{equation}
-It's more accurate because it's centered about the value of $x$ where we want
-the derivative to be evaluated.
+which comes from finding the slope of the line through $f_i$'s nearest neighbors, $f_{i-i}$ and $f_{i+1}$.
 
-\marginfig{Figures/figDerivatives}{The centered derivative approximation works
-    best.}
-
-To see the importance of centering, consider Fig.~\ref{Figures/figDerivatives}. In
-this figure we are trying to find the slope of the tangent line at $x=0.4$.
-The usual calculus-book formula uses the data points at $x=0.4$ and $x=0.5$,
-giving tangent line $a$. It should be obvious that using the ``centered''
-pair of points $x=0.3$ and $x=0.5$ to obtain tangent line $b$ is a much
-better approximation.
 
 As an example of what a good job centering does, try differentiating
 $\sin{x}$ at $x=1$ this way:
@@ -50,8 +43,8 @@ print(dfdx/cos(1))
 \end{Verbatim}
 You can also take the second derivative numerically using the formula
 \begin{equation}
-\frac{d^2 f }{ dx^2} = \lim_{ h \rightarrow 0}
-\frac{f(x+h)-2 f(x)+f(x-h) }{ h^2} .
+\frac{d^2 f_i }{ dx^2} \approx
+\frac{f_{i+1}-2 f_i+f_{i-1} }{ \Delta x^2} .
 \end{equation}
 For example,
 \begin{Verbatim}
@@ -64,12 +57,7 @@ answer $-\sin(1)$ to see how well this does
 print( d2fdx2/(-sin(1)) )
 \end{Verbatim}
 
-You may be wondering how to choose the step size $h$. This is a little
-complicated; take a course on numerical analysis and you can see how it's
-done. But until you do, here's a rough rule of thumb. If $f(x)$ changes
-significantly over an interval in $x$ of about $L$, approximate the first
-derivative of $f(x)$ using $h=10^{-5}L$; to approximate the second derivative
-use $h=10^{-4}L$.
+
 
 \index{Derivative of an array} If you want to differentiate a function
 defined by arrays $x$ and $f$, then the step size is already determined; you
@@ -78,16 +66,8 @@ $\Delta x$ is the spacing between points in the $x$ array.  {\it Notice that
 the data must be evenly spaced for the example we are going to give you to
 work.}
 
-The idea is to approximate the derivative at $x=x_j$ in the array by using
-the function values $f_{j+1}$ and $f_{j-1}$ like this
-\begin{equation}
-f'(x_j) \approx \frac{f_{j+1}-f_{j-1} }{ 2 h} .
-\end{equation}
-This works fine for an $N$ element array at all points from $x_2$ to
-$x_{N-1}$, but it doesn't work at the endpoints because you can't reach
-beyond the ends of the array to find the needed values of $f$. So we use this
-formula for $x_2$ through $x_{N-1}$, then use linear extrapolation to find
-the derivatives at the endpoints, like this
+We approximate the derivative at $x=x_j$ in the array by using the center differenced formula on inner points (1 to $N-1$), and linearly extrapolate to the end points:
+
 \begin{codeexample}
 \begin{VerbatimOut}{\listingFile}
 from numpy import arange, sin, cos, zeros_like
@@ -122,7 +102,7 @@ pyplot.show()
 
 Here is an example of a function that takes as inputs an array $y$
 representing the function $y(x)$, and $dx$ the $x$-spacing between function
-points in the array. It returns {\tt yp} and {\tt ypp}, numerical
+points in the array. It returns {\code yp} and {\code ypp}, numerical
 approximations to the first and second derivatives. \index{Derivative
 function}
 
@@ -189,23 +169,16 @@ pyplot.show()
 \section{Integrals}
 
 \subsection*{Definite Integrals}
-\index{Integrals, numerical} There are many ways to do definite integrals
-numerically, and the more accurate these methods are the more complicated
-they become. But for everyday use the midpoint method usually works just
-fine, and it's very easy to code. The idea of the midpoint method is to
-approximate the integral $\int_a^b f(x) dx$ by subdividing the interval
-$[a,b]$ into $N$ subintervals of width $h = (b-a)/N$ and then evaluating
-$f(x)$ at the center of each subinterval. We replace $f(x) dx$ by $f(x_j) h$
-and sum over all the subintervals to obtain an approximate integral. This
-method is shown in Fig.~\ref{Figures/figMidpoint}. Notice that this method should
-work pretty well over subintervals like [1.0,1.5] where $f(x)$ is nearly
-straight, but probably is lousy over subintervals like [0.5,1.0] where the
-function curves.
+\index{Integrals, numerical} The simplest way to do numerical integrals is with the midpoint rule. It is simple to code and usually\sidenote{The trapezoid rule and Simpson's rule are both more accurate, but are also more difficult to code. As a general rule, use the easiest method that gives the level of accuracy that you need.} accurate enough. The midpoint rule approximates the integral $\int_a^b f(x) dx$ by subdividing the interval
+$[a,b]$ into $N$ equal-width rectangles\sidenote{Calculate the width of the triangles with $\Delta x = (b-a)/N$.}. The height of each rectangle is equal to the value $f(x)$ at the center of the rectangle (see Fig.~\ref{Figures/figMidpoint}).
 
 
 \marginfig{Figures/figMidpoint}{The midpoint rule works OK if the function is
-    nearly straight across each interval. }
+    nearly straight across each interval like in the second rectangle. A smaller $\Delta x$ would make the integral much more accurate.}
 
+To see how accurate this method is, try running the example below with $N=1000$ points, then
+2000, then 4000, etc., and watch which decimal points are changing as you go
+to higher accuracy.
 
 \begin{codeexample}
 \begin{VerbatimOut}{\listingFile}
@@ -228,18 +201,15 @@ print(err)
 \end{VerbatimOut}
 \end{codeexample}
 
-If you need to do a definite integral in Python, this is an easy way to do
-it. And to see how accurate your answer is, do it with 1000 points, then
-2000, then 4000, etc., and watch which decimal points are changing as you go
-to higher accuracy.
 
-%\subsection*{Definite Integral Function {\tt defint.m}}
+
+%\subsection*{Definite Integral Function \code{defint.m}}
 %
 %\index{Definite integral function} This function uses the midpoint
 %rule to integrate a function over a chosen interval using a chosen
 %number of integration points. The function to be integrated must be
 %coded in the sub function contained at the end of the function file
-%{\tt defint.m} (Note: Python's {\tt quad} and especially {\tt quadl}
+%\code{defint.m} (Note: Python's \code{quad} and especially \code{quadl}
 %do the same thing, only better. This is just a simple example to
 %show you how to program.)
 %
@@ -273,9 +243,9 @@ to higher accuracy.
 %\end{VerbatimOut}
 %\end{codeexample}
 %
-%To use it, first edit the file {\tt defint.m} so that the sub
+%To use it, first edit the file \code{defint.m} so that the sub
 %function at the bottom of the file contains the function you want to
-%integrate. Then give {\tt defint.m} the integration limits (say
+%integrate. Then give \code{defint.m} the integration limits (say
 %$a=0$ and $b=1$) and the number of points $N=1000$ to use in the
 %midpoint rule like this
 %\begin{Verbatim}
@@ -286,19 +256,18 @@ to higher accuracy.
 %s=defint(0,1,1000);
 %\end{Verbatim}
 %In the first case the approximate integral prints on the screen; in
-%the second it doesn't print but is assigned to {\tt s}.
+%the second it doesn't print but is assigned to \code{s}.
 
 \subsection*{Indefinite integrals}
 
-And what if you need to find the indefinite integral? For example,
+What if you need to find the indefinite integral? For example,
 maybe you need to calculate the integral of
 \begin{equation}
 f(x) = e^{-x^2}
 \end{equation}
 which has no analytical solutions. You can integrate this function
 numerically in exactly the same way that you did the definite
-integral.  The only difference is that instead of summing up all of
-the contributions into one number, you keep a cumulative sum.  Here is
+integral with one difference: instead of saving just the total value of the integral, keep a cumulative total at each point.  Here is
 one way that you could do it with Python:
 
 \begin{Verbatim}
@@ -319,7 +288,7 @@ pyplot.plot(x,s)
 pyplot.show()
 \end{Verbatim}
 You'll want to study the line starting with \verb!s=! until it makes
-sense.  If this line doesn't make sense to you, we can make it more
+sense\sidenote{This notation is called a list comprehension. You can find out more about them in the List Comprehensions section of Chapter \ref{chap:advpython}}.  If this line doesn't make sense to you, we can make it more
 explicit (but less elegant programatically) by replacing the
 integration line with:
 \begin{Verbatim}
@@ -330,38 +299,13 @@ for i in f:
     s.append(thesum)
 \end{Verbatim}
 
-Here we have implemented the rectangle rule for integrating the function.
+Here we have implemented the midpoint rule for integrating the function.
 More complicated integration methods (trapezoidal, Simpson's rule,
-etc.) can be implemented by changing the thing that is being added in
-the loop.
+etc.) can be implemented by changing the sum inside the loop.
 
 \section{Python Integrators}
 The \code{numpy} and \code{scipy} libraries have several functions
-designed to perform numerical integration.  When integrating, there
-are two types of situations that are most likely: i) You know the
-function that you want to integrate or ii) You don't know the
-function you are integrating but you have samples (data points) from the it.
-If you know what function you want to integrate,
-\code{quad}\sidenote{\code{dblquad} and \code{tplquad} are also
-  available for double and triple integrations respectively.  Look for
-online help for more details.},
-\code{romberg}, and \code{quadrature} are good choices.  Here is an
-example of how to use \code{romberg}:
-\begin{Verbatim}
-from numpy import sin, exp
-from scipy.integrate import romberg
-
-# First define the function you are wanting to integrate
-def func(x):
-   return sin(2 * x**2) * exp(-x)
-
-integral = romberg(func,0,5)
-print integral
-\end{Verbatim}
-The functions \code{quad} and \code{quadruature} can be used in the
-same way.
-
-For example, \code{numpy}
+designed to perform numerical integration. For example, \code{numpy}
 has a function called \code{cumsum} (sounds helpful here right?) that
 integrates using the rectangle rule, just as we did above. Here is how
 it works:
@@ -383,22 +327,30 @@ pyplot.plot(x,s)
 pyplot.show()
 \end{Verbatim}
 
-The Scipy libary has a sublibrary called {\tt integrate} which
-contains a host of useful functions for integrating.  function will do a similar thing except that it
-will use.
-\index{Indefinite integral function} This function takes an array of function
-values in {\tt y} and an $x$-spacing {\tt dx} and returns an approximate
+When integrating, there
+are two types of situations that are most likely:
+\begin{enumerate}
+
+\item You don't know the
+function you are integrating but you have samples (data points) from it.
+\item You do know the
+function that you want to integrate.
+\end{enumerate}
+
+
+
+
+The Scipy libary has a sublibrary called \code{integrate} which
+contains a host of useful functions for integrating when you only have samples.
+\index{Indefinite integral function} The \code{cumtrapz} function from this library takes an array of
+values in \code{y} and an $x$-spacing \code{dx} and returns an approximate
 indefinite integral function $g(x)=\int_a^x y(x') dx'$ using the trapezoid
-rule. This rule says to use as the height of the rectangle on the interval of
-width $h$ the average of the function values on the edges of the interval:
-\begin{equation}
-\int_x^{x+h} y(x') dx' \approx \frac{y(x)+y(x+h) }{ 2} h
-\end{equation}
-Because \texttt{cumtrapz} uses the trapezoid rule instead of the midpoint
+rule\sidenote{Because \code{cumtrapz} uses the trapezoid rule instead of the midpoint
 rule, the array of function values must start at $x=a$ and be defined at the
-edges of the subintervals of size $h$ rather than at the centers.  Once you
-have your function values stored in an array, say \texttt{f}, you calculate
-the indefinite integral like this:
+edges of the intervals rather than at the centers.}.
+
+Once you have your function values stored in an array, say \code{f}, you calculate
+the indefinite integral like this:\index{Integration, Python's Cumtrapz}
 \begin{Verbatim}
 from scipy.integrate import cumtrapz
 from numpy import arange,abs,cos,pi
@@ -410,118 +362,92 @@ g=cumtrapz(f,x,initial = 0)
 pyplot.plot(x,g,'ro',x,f,'b-')
 pyplot.show()
 \end{Verbatim}
-where \texttt{dx} is the point spacing.
-
-\index{Integration, Python's Cumtrapz} \index{Integration, Python's Trapz}
-Here is a function that does essentially the same calculation as
-\texttt{cumtrapz}, but is coded to be readable. This function takes
-\texttt{dx} as an argument and multiplies it at each step of the calculation,
-whereas \texttt{cumtrapz} assumes a step size of one. This code is more
-intuitive, but less efficient. Study this code to see how it works, but use
-\texttt{cumtrapz} and multiply by \texttt{dx} as above when you actually do
-calculations.
-\begin{codeexample}
-\begin{VerbatimOut}{\listingFile}
-function g=indefint(y,dx)
-
-% returns the indefinite integral of the function
-% represented by the array y.  y(1) is assumed to
-% be y(a), the function value at the lower limit of the
-% integration.  The function values are assumed to be
-% values at the edges of the subintervals rather than
-% the midpoint values.  Hence, we have to use the
-% trapezoid rule instead of the midpoint rule:
-%
-% integral(y(x)) from x to x+dx is (y(x)+y(x+dx))/2*dx
-
-% The answer is returned as an array of values defined
-% at the same points as y
-
-% the first value of g(x) is zero because at this first value
-% x is at the lower limit so the integral is zero
-
-g(1)=0;
-
-N=length(y);
-
-% step across each subinterval and use the trapezoid area
-% rule to find each successive addition to the indefinite
-% integral
-
-for n=2:N
-
-   % Trapezoid rule
-   g(n)=g(n-1)+(y(n-1)+y(n))*.5*dx;
-
-end
-\end{VerbatimOut}
-\end{codeexample}
+where \code{dx} is the point spacing.
 
 
 
 \index{Integrate, Python Integrator} \index{Integrate2, Python 2-D
 Integrator} For simple integrals of functions sampled at discrete points
-(e.g. measured data) it is usually fine to use {\tt trapz} to calculate a
-definite integral, or {\tt cumtrapz} to calculate an indefinite integral.
-Both functions treat the function as little line segments connecting the data
-points in your array.  Performing integrals on raw measured data is usually a
+(e.g. measured data) it is usually\sidenote{Performing integrals on raw measured data is usually a
 bad idea unless your data is very clean. If your data is noisy, you'll
 probably want to consider smoothing it or fitting it to a curve before trying
-to take an integral.
+to take an integral.} fine to use \code{trapz}\index{Integration, Python's Trapz} to calculate a
+definite integral, or \code{cumtrapz} to calculate an indefinite integral.
+Both functions treat the function as little line segments connecting the data
+points in your array.
 
 If you want to calculate the integral of a function rather than data stored
 in an array, you have more options because you can calculate function values
 at arbitrary points rather than having to interpolate between array elements.
-For this type of problem, use the command {\tt integral} (or {\tt integral2},
-or {\tt integrate3} for multiple dimension integrals).  These functions take
-references to a Python function in their arguments (like {\tt fzero},
-\texttt{fsolve}, and \texttt{fminsearch} did) and adjust the grid step size
-to optimize accuracy.
-
-The Python routine {\tt integral} adaptively approximates the function with
-parabolas (as shown in Fig.~\ref{Figures/figSimpson}) or other functions instead of
-the rectangles of the midpoint method. The parabolic method is called
-Simpson's Rule. As you can see from Fig.~\ref{Figures/figSimpson}, parabolas do a
-much better job, making {\tt quad} a standard Python choice for integration.
-To use the {\tt integral} command, you need to define your function using an
-anonymous function.  For example, to
-define an anonymous function to represent the function $f(x) = \cos(x)
-e^{-x}$, you use this syntax:
+For this type of problem, the functions
+\code{quad}\sidenote{\code{dblquad} and \code{tplquad} are also
+  available for double and triple integrations respectively.  Look for
+online help for more details.},
+\code{romberg}, and \code{quadrature} are good choices.  Here is an
+example of how to use \code{romberg}:
 \begin{Verbatim}
-f=@(x) exp(-x).*cos(x)|
+from numpy import sin, exp
+from scipy.integrate import romberg
+
+# First define the function you are wanting to integrate
+def func(x):
+   return sin(2 * x**2) * exp(-x)
+
+integral = romberg(func,0,5)
+print integral
 \end{Verbatim}
-After you have defined {\tt f} this way, you can use it just like built-in
-Python functions like {\tt sin} and {\tt cos}.  For instance, try these
-commands after defining {\tt f} as above:
-\begin{Verbatim}
-f(1)
-f(1:10)
-\end{Verbatim}
-Using the anonymous function syntax, we can use {\tt integral} to integrate
-$\cos(x) e^{-x}$ from 0 to 2 like this:
-
-\marginfig{Figures/figSimpson}{Fitting parabolas (Simpson's Rule) works better.}
+The functions \code{quad} and \code{quadruature} can be used in the
+same way.
 
 
-\begin{codeexample}
-\begin{VerbatimOut}{\listingFile}
-clear; close all;
+% use the command \code{integral}.  This function takes
+%references to a Python function in its arguments (like \code{fzero},
+%\code{fsolve}, and \code{fminsearch} did) and adjust the grid step size
+%to optimize accuracy.
 
-f=@(x) exp(-x).*cos(x)
-
-integral(f,0,2,'AbsTol',1e-8)
-\end{VerbatimOut}
-\end{codeexample}
-
-Python also has a command {\tt integrate2} that does double integrals. Here's
-how to use it to integrate the function $f(x,y) = \cos (xy)$.
-
-\begin{codeexample}
-\begin{VerbatimOut}{\listingFile}
-clear; close all;
-
-f = @(x,y) cos(x.*y);
-
-integral2(f,0,2,0,2,'AbsTol',1e-10)
-\end{VerbatimOut}
-\end{codeexample}
+%The \code{integral} function adaptively approximates the integration function with
+%parabolas\sidenote{This method is called Simpson's Rule.} (as shown in Fig.~\ref{Figures/figSimpson}) or other functions instead of
+%the rectangles of the midpoint method. As you can see from Fig.~\ref{Figures/figSimpson}, parabolas do a
+%much better job, making \code{quad} a standard Python choice for integration.
+%To use the \code{integral} command, you need to define your function using an
+%anonymous function.  For example, to
+%define an anonymous function to represent the function $f(x) = \cos(x)
+%e^{-x}$, you use this syntax:
+%\begin{Verbatim}
+%f=@(x) exp(-x).*cos(x)|
+%\end{Verbatim}
+%After you have defined \code{f} this way, you can use it just like built-in
+%Python functions like \code{sin} and \code{cos}.  For instance, try these
+%commands after defining \code{f} as above:
+%\begin{Verbatim}
+%f(1)
+%f(1:10)
+%\end{Verbatim}
+%Using the anonymous function syntax, we can use \code{integral} to integrate
+%$\cos(x) e^{-x}$ from 0 to 2 like this:
+%
+%\marginfig{Figures/figSimpson}{Fitting parabolas (Simpson's Rule) works better.}
+%
+%
+%\begin{codeexample}
+%\begin{VerbatimOut}{\listingFile}
+%clear; close all;
+%
+%f=@(x) exp(-x).*cos(x)
+%
+%integral(f,0,2,'AbsTol',1e-8)
+%\end{VerbatimOut}
+%\end{codeexample}
+%
+%Python also has a command \code{integrate2} that does double integrals. Here's
+%how to use it to integrate the function $f(x,y) = \cos (xy)$.
+%
+%\begin{codeexample}[f2int.py]
+%\begin{VerbatimOut}{\listingFile}
+%clear; close all;
+%
+%f = @(x,y) cos(x.*y);
+%
+%integral2(f,0,2,0,2,'AbsTol',1e-10)
+%\end{VerbatimOut}
+%\end{codeexample}

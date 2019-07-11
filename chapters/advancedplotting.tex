@@ -14,12 +14,12 @@ is a vector-valued function, using vector field plots.
 \index{Meshgrid}
 
 Before we can display 2-dimensional data, we need to define arrays
-{\tt X} and {\tt Y} that span the region that you want to plot, then create
+\code{X} and \code{Y} that span the region that you want to plot, then create
 the function $F(x,y)$ over the plane.  First, you need to understand
 how Python goes from
-one-dimensional arrays \texttt{x} and \texttt{y} to two-dimensional
-matrices \texttt{X} and \texttt{Y} using the commands {\tt
-meshgrid} and {\tt mgrid}. Begin by executing the following
+one-dimensional arrays \code{x} and \code{y} to two-dimensional
+matrices \code{X} and \code{Y} using the commands {\tt
+meshgrid} and \code{mgrid}. Begin by executing the following
 example.
 \begin{codeexample}
 \begin{VerbatimOut}{\listingFile}
@@ -70,7 +70,7 @@ the arrays \code{x} and \code{y} are given by
 x=[1,2,3]
 y=[4,5]
 \end{Verbatim}
-The command {\tt X,Y=meshgrid(x,y)} produces the following
+The command \code{X,Y=meshgrid(x,y)} produces the following
 results:\marginfig{Figures/figMeshGrid}{\label{figMeshGrid}}
 \begin{equation}\label{eq:MeshgridMatrices}
 X = \left[ \begin{array}{lll}
@@ -109,12 +109,12 @@ two-dimensional matrices would be indexed as
 \begin{equation}
 X(i,j)~~~~Y(i,j)
 \end{equation}
-instead of in the backwards order made by {\tt meshgrid}.
+instead of in the backwards order made by \code{meshgrid}.
 
-Numpy has a command called {\tt mgrid} which is similar to
+Numpy has a command called \code{mgrid} which is similar to
 \code{meshgrid} but does the conversion to two dimensions the other
 way round. For instance, with the example arrays for $x$ and $y$ used
-above {\tt X,Y=mgrid[1:4,4:6]} would produce the results
+above \code{X,Y=mgrid[1:4,4:6]} would produce the results
 \begin{equation}
 X = \left[ \begin{array}{ll}
 1 & 1 \\
@@ -151,8 +151,8 @@ like in the range.  This is very similar to the difference between
 
 
 Plots made either with \code{plot_surface(X,Y,F)} or \code{contour(X,Y,F)} (discussed below) will look
-the same with either grid.  However, {\tt streamline} plots require your
-data to be in the format provided by {\tt meshgrid}.  You will need to be
+the same with either grid.  However, \code{streamline} plots require your
+data to be in the format provided by \code{meshgrid}.  You will need to be
 familiar with both methods of creating a grid. You will have need to do
 it both ways, depending on the circumstance.
 
@@ -319,7 +319,7 @@ pyplot.show()
 
 Python will plot vector fields for you with arrows. This is a good
 way to visualize flows, electric fields, magnetic fields, etc. The
-command that makes these plots is {\tt quiver} and the code below
+command that makes these plots is \code{quiver} and the code below
 illustrates its use in displaying the electric field of a line
 charge and the magnetic field of a long wire.  Note that the vector
 field components must be computed in Cartesian geometry.
@@ -397,7 +397,7 @@ electric and magnetic fields are the field lines that you learned about in
 your introductory electricity and magnetism course.
 
 As mentioned above, the streamline plotting routine assumes that the grid data
-was created in the {\tt meshgrid} format rather than the {\tt mgrid} format.
+was created in the \code{meshgrid} format rather than the \code{mgrid} format.
 
 \begin{codeexample}
 \begin{VerbatimOut}{\listingFile}
