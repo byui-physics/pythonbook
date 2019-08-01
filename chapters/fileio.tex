@@ -44,6 +44,16 @@ simple.  If your file falls into the latter category, you will have to
 use native Python functions to read and parse the file contents manually based
 on the formatting of the file.
 
+
+\indent \textbf{Note: One challenge when reading a file is making sure
+  that python is looking in the right directory for that file. For
+  Canopy users, the search path is listed in the console window (lower
+  pane). You can change that directoy by clicking on the dropdown
+  arrow and selecting ``Change to Editor Directory''.(in some
+  versions, you have to right-click on the console window to get the
+  menu) Then just make sure the file you want to read is in the same
+  folder as your python file. }
+
 \subsection*{Structured data files with numerical data only}
 Let's start with highly-structured data files with only numerical entries.
 In this case, Numpy's \code{loadtxt} is your friend.  It will load the
